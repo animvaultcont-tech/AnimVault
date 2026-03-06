@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AnimVault — 70,000+ Developer Animations</title>
+  <meta name="description" content="AnimVault — 70,000+ GPU-accelerated animations. Browse, copy, and deploy professional animations instantly. No signup required.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/themes.css">
+  <link rel="stylesheet" href="css/main.css">
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <style>
+    /* Performance: prevent layout shifts, improve paint */
+    .page { contain: layout style; will-change: auto; }
+    #page-transition { will-change: opacity, visibility; }
+    #pt-bg  { will-change: opacity; }
+    #pt-logo { will-change: opacity, transform; }
+    * { -webkit-tap-highlight-color: transparent; }
+    img, canvas { image-rendering: optimizeSpeed; }
+  </style>
+</head>
+<body>
+
+  <!-- ===== CUSTOM CURSOR ===== -->
+  <div id="cursor-dot" class="cursor-dot"></div>
+  <div id="cursor-ring" class="cursor-ring"></div>
+
+  <!-- ===== TOAST CONTAINER ===== -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- ===== SPLASH SCREEN ===== -->
+  <div id="splash-screen">
+    <canvas id="splash-canvas"></canvas>
+    <div class="splash-content">
+      <div class="floating-orb" style="width:300px;height:300px;background:radial-gradient(circle,#6366f140,transparent);top:-100px;left:-100px;animation-duration:6s"></div>
+      <div class="floating-orb" style="width:200px;height:200px;background:radial-gradient(circle,#8b5cf640,transparent);bottom:-80px;right:-80px;animation-duration:8s;animation-delay:1s"></div>
+      <div class="splash-logo">AnimVault</div>
+      <div class="splash-tagline">Developer Animation Platform</div>
+      <div class="splash-bars">
+        <div class="splash-bar"></div>
+        <div class="splash-bar"></div>
+        <div class="splash-bar"></div>
+        <div class="splash-bar"></div>
+        <div class="splash-bar"></div>
+      </div>
+      <div style="margin-top:2rem;font-size:0.75rem;color:rgba(100,100,200,0.5);font-family:'JetBrains Mono',monospace;animation:taglineReveal 0.4s ease forwards 1.5s;opacity:0">
+        70,000+ Animations • 10 Categories • Free to Use
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== PAGE TRANSITION OVERLAY ===== -->
+  <div id="page-transition" style="position:fixed;inset:0;z-index:200000;pointer-events:none;display:flex;align-items:center;justify-content:center;overflow:hidden;visibility:hidden">
+    <!-- Clean full-screen fade — no skew, no cut -->
+    <div id="pt-bg" style="position:absolute;inset:0;background:var(--bg-primary);opacity:0;transition:none"></div>
+    <!-- AV logo center reveal -->
+    <div id="pt-logo" style="position:relative;z-index:2;opacity:0;transform:scale(0.6);transition:none;text-align:center">
+      <div style="font-family:'Sora',sans-serif;font-size:clamp(3rem,12vw,6rem);font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2),var(--accent3));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 30px var(--glow)) drop-shadow(0 0 60px var(--glow));letter-spacing:-0.04em;line-height:1">AV</div>
+      <div id="pt-progress" style="margin-top:1rem;width:60px;height:2px;background:var(--border);border-radius:2px;margin-left:auto;margin-right:auto;overflow:hidden">
+        <div id="pt-bar" style="width:0%;height:100%;background:var(--gradient);border-radius:2px;transition:none"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== BACK TO TOP ===== -->
+  <button id="back-to-top" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Back to top" style="position:fixed;bottom:2rem;right:2rem;z-index:9000;width:52px;height:52px;border-radius:16px;background:var(--bg-glass);border:1px solid var(--border);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;box-shadow:0 8px 32px rgba(0,0,0,0.4),0 0 20px var(--glow);opacity:0;transform:translateY(24px) scale(0.75);transition:all 0.4s cubic-bezier(0.34,1.56,0.64,1);pointer-events:none;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="flex-shrink:0"><path d="M8 3L3 8M8 3L13 8M8 3V13" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <span style="font-size:0.5rem;font-family:'JetBrains Mono',monospace;color:var(--accent);letter-spacing:0.05em;line-height:1">TOP</span>
+  </button>
+
+  <!-- ===== NAVBAR ===== -->
+  <nav class="navbar" id="main-navbar">
+    <a href="#" class="nav-logo" onclick="App.navigate('home'); return false;">AnimVault</a>
+
+    <!-- Desktop nav — primary links only, legal in footer -->
+    <ul class="nav-links" id="nav-links">
+      <li><a href="#" data-page="home"    onclick="App.navigate('home');    return false;">Home</a></li>
+      <li><a href="#" data-page="about"   onclick="App.navigate('about');   return false;">About</a></li>
+      <li><a href="#" data-page="docs"    onclick="App.navigate('docs');    return false;">Docs</a></li>
+      <li><a href="#" data-page="faq"     onclick="App.navigate('faq');     return false;">FAQ</a></li>
+      <li><a href="#" data-page="contact" onclick="App.navigate('contact'); return false;">Contact</a></li>
+    </ul>
+
+    <div class="nav-actions">
+      <div class="theme-switcher">
+        <button class="theme-btn" onclick="ThemeEngine.toggle()">🎨 <span class="theme-label">Theme</span> ▾</button>
+        <div class="theme-dropdown" id="theme-dropdown"></div>
+      </div>
+      <!-- Hamburger for mobile -->
+      <button class="mobile-menu-btn" id="mobile-menu-btn" onclick="toggleMobileMenu()" aria-label="Menu">
+        <span class="ham-line"></span>
+        <span class="ham-line"></span>
+        <span class="ham-line"></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Mobile drawer overlay -->
+  <div id="mobile-overlay" onclick="toggleMobileMenu()" style="position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:998;opacity:0;pointer-events:none;transition:opacity 0.3s;backdrop-filter:blur(4px)"></div>
+
+  <!-- Mobile drawer -->
+  <div id="mobile-drawer" style="position:fixed;top:0;right:0;bottom:0;width:280px;background:var(--bg-secondary);border-left:1px solid var(--border);z-index:999;transform:translateX(100%);transition:transform 0.35s cubic-bezier(0.4,0,0.2,1);padding:5rem 2rem 2rem;display:flex;flex-direction:column;gap:0.25rem">
+    <div style="position:absolute;top:1rem;right:1rem">
+      <button onclick="toggleMobileMenu()" style="background:var(--bg-card);border:1px solid var(--border);color:var(--text-primary);width:36px;height:36px;border-radius:8px;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center">✕</button>
+    </div>
+    <div style="font-size:0.7rem;font-family:'JetBrains Mono',monospace;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.15em;margin-bottom:0.75rem">Navigation</div>
+    <a href="#" class="drawer-link" data-page="home"    onclick="App.navigate('home');    toggleMobileMenu(); return false;">🏠 Home</a>
+    <a href="#" class="drawer-link" data-page="about"   onclick="App.navigate('about');   toggleMobileMenu(); return false;">⚡ About</a>
+    <a href="#" class="drawer-link" data-page="docs"    onclick="App.navigate('docs');    toggleMobileMenu(); return false;">📖 Docs</a>
+    <a href="#" class="drawer-link" data-page="faq"     onclick="App.navigate('faq');     toggleMobileMenu(); return false;">❓ FAQ</a>
+    <a href="#" class="drawer-link" data-page="contact" onclick="App.navigate('contact'); toggleMobileMenu(); return false;">📧 Contact</a>
+    <div style="height:1px;background:var(--border);margin:1rem 0"></div>
+    <div style="font-size:0.7rem;font-family:'JetBrains Mono',monospace;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.15em;margin-bottom:0.5rem">Legal</div>
+    <a href="#" class="drawer-link drawer-link-sm" data-page="privacy" onclick="App.navigate('privacy'); toggleMobileMenu(); return false;">Privacy Policy</a>
+    <a href="#" class="drawer-link drawer-link-sm" data-page="terms"   onclick="App.navigate('terms');   toggleMobileMenu(); return false;">Terms of Service</a>
+    <div style="margin-top:auto;padding-top:2rem">
+      <div style="font-size:0.75rem;color:var(--text-muted);text-align:center;font-family:'JetBrains Mono',monospace">AnimVault v1.0 • Free Forever</div>
+    </div>
+  </div>
+
+  <!-- ===== PREVIEW MODAL ===== -->
+  <div class="modal-overlay" id="preview-modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title gradient-text">Live Preview</div>
+        <button class="modal-close" onclick="AnimGrid.closePreview()">✕</button>
+      </div>
+      <iframe class="preview-iframe" id="preview-iframe" sandbox="allow-scripts"></iframe>
+    </div>
+  </div>
+
+  <!-- =================== PAGES =================== -->
+
+  <!-- ===== HOME PAGE ===== -->
+  <div class="page" id="page-home">
+    <div class="home-hero">
+      <div class="floating-orb" style="width:500px;height:500px;background:radial-gradient(circle,rgba(99,102,241,0.08),transparent);top:-200px;left:50%;transform:translateX(-50%)"></div>
+      <div style="display:inline-block;padding:0.3rem 1rem;background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.3);border-radius:20px;font-size:0.8rem;color:var(--accent);margin-bottom:1.5rem;font-family:'JetBrains Mono',monospace">
+        ✦ 70,000+ Animations — Free, No Signup Required
+      </div>
+      <h1>
+        <span class="gradient-text">Every Animation</span><br>
+        You'll Ever Need
+      </h1>
+      <p>Browse, copy, and deploy professional animations instantly. 10 categories, infinite variations, ready for production.</p>
+      <div class="search-container">
+        <input type="text" id="search-input" class="search-input" placeholder="Search glow, typewriter, loader..." autocomplete="off">
+        <span class="search-icon">🔍</span>
+      </div>
+    </div>
+
+    <div class="stats-section">
+      <div class="stat-card">
+        <div class="stat-number">70K+</div>
+        <div class="stat-label">Total Animations</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">10</div>
+        <div class="stat-label">Categories</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">GPU</div>
+        <div class="stat-label">Accelerated</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">Free</div>
+        <div class="stat-label">No Signup</div>
+      </div>
+    </div>
+
+    <div class="category-filter">
+      <button class="cat-btn active" onclick="AnimGrid.filter('All')">All</button>
+      <button class="cat-btn" onclick="AnimGrid.filter('Text')">✍ Text</button>
+      <button class="cat-btn" onclick="AnimGrid.filter('SVG')">⬡ SVG</button>
+      <button class="cat-btn" onclick="AnimGrid.filter('Button')">⊞ Button</button>
+      <button class="cat-btn" onclick="AnimGrid.filter('Background')">◱ Background</button>
+      <button class="cat-btn" onclick="AnimGrid.filter('Card')">▣ Card</button>
+      <button class="cat-btn" onclick="AnimGrid.filter('Input')">⊟ Input</button>
+      <button class="cat-btn" onclick="AnimGrid.filter('Loader')">⟳ Loader</button>
+      <button class="cat-btn" onclick="AnimGrid.filter('Cursor')">⊹ Cursor</button>
+      <button class="cat-btn" onclick="AnimGrid.filter('Icon')">★ Icon</button>
+      <button class="cat-btn" onclick="AnimGrid.filter('Scroll')">↓ Scroll</button>
+    </div>
+
+    <div id="anim-grid" class="anim-grid"></div>
+  </div>
+
+  <!-- ===== ABOUT PAGE ===== -->
+  <div class="page" id="page-about">
+    <div class="about-hero">
+      <div class="floating-orb" style="width:600px;height:600px;background:radial-gradient(circle,rgba(99,102,241,0.07),transparent);top:-200px;left:50%;transform:translateX(-50%)"></div>
+      <div style="display:inline-block;padding:0.3rem 1rem;background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.3);border-radius:20px;font-size:0.8rem;color:var(--accent);margin-bottom:1.5rem">✦ About AnimVault</div>
+      <h1><span class="gradient-text">Built for</span><br>Developers</h1>
+      <p style="color:var(--text-secondary);font-size:1.1rem;line-height:1.7;margin-top:1rem">
+        AnimVault is the ultimate animation platform for developers and designers. 70,000+ production-ready animations across 10 categories — all GPU-accelerated, freely downloadable, no account needed.
+      </p>
+    </div>
+    <div class="about-grid">
+      <div class="about-card">
+        <span class="about-icon">⚡</span>
+        <h3>GPU Accelerated</h3>
+        <p>Every animation uses will-change, transform3d, and IntersectionObserver for buttery-smooth 60fps performance.</p>
+      </div>
+      <div class="about-card">
+        <span class="about-icon">🎨</span>
+        <h3>70,000+ Animations</h3>
+        <p>7,000 base animations multiplied by 10 variation parameters: speed, color, direction, blur, glow, scale, and more.</p>
+      </div>
+      <div class="about-card">
+        <span class="about-icon">📋</span>
+        <h3>One-Click Copy</h3>
+        <p>Click any animation to get HTML, CSS, and JS code. Copy with one click and use directly in your project — no signup.</p>
+      </div>
+      <div class="about-card">
+        <span class="about-icon">🔍</span>
+        <h3>Smart Search</h3>
+        <p>Search by name, category, or effect type. Filter by Text, SVG, Button, Card, Loader, and 6 more categories.</p>
+      </div>
+      <div class="about-card">
+        <span class="about-icon">🎭</span>
+        <h3>5 Themes</h3>
+        <p>Switch between Dark, Light, Rainbow, Nano (neon), and Crystal (glassmorphism) themes instantly.</p>
+      </div>
+      <div class="about-card">
+        <span class="about-icon">📱</span>
+        <h3>Live Preview</h3>
+        <p>Preview any animation in a sandboxed iframe. Edit the code live and see changes in real-time before copying.</p>
+      </div>
+    </div>
+    <div style="max-width:800px;margin:4rem auto;padding:0 2rem;text-align:center">
+      <h2 class="section-title" style="margin-bottom:1rem">Our Mission</h2>
+      <p style="color:var(--text-secondary);line-height:1.8;font-size:1rem">
+        Every developer deserves access to professional-grade animations without spending hours writing CSS. AnimVault puts 70,000+ animations at your fingertips — searchable, filterable, copyable, and production-ready. Completely free.
+      </p>
+    </div>
+  </div>
+
+  <!-- ===== DOCS PAGE ===== -->
+  <div class="page" id="page-docs">
+    <div class="docs-layout">
+      <aside class="docs-sidebar">
+        <div class="docs-nav-group">
+          <div class="docs-nav-title">Getting Started</div>
+          <a href="#doc-welcome"   class="docs-nav-item active" onclick="docScroll('doc-welcome');return false">Welcome</a>
+          <a href="#doc-browse"    class="docs-nav-item" onclick="docScroll('doc-browse');return false">Browse Animations</a>
+          <a href="#doc-search"    class="docs-nav-item" onclick="docScroll('doc-search');return false">Search &amp; Filter</a>
+        </div>
+        <div class="docs-nav-group">
+          <div class="docs-nav-title">Using Animations</div>
+          <a href="#doc-copy"      class="docs-nav-item" onclick="docScroll('doc-copy');return false">Copy Code</a>
+          <a href="#doc-preview"   class="docs-nav-item" onclick="docScroll('doc-preview');return false">Live Preview</a>
+          <a href="#doc-edit"      class="docs-nav-item" onclick="docScroll('doc-edit');return false">Edit &amp; Customize</a>
+        </div>
+        <div class="docs-nav-group">
+          <div class="docs-nav-title">Platform</div>
+          <a href="#doc-themes"    class="docs-nav-item" onclick="docScroll('doc-themes');return false">Themes</a>
+          <a href="#doc-categories" class="docs-nav-item" onclick="docScroll('doc-categories');return false">Categories</a>
+        </div>
+        <div class="docs-nav-group">
+          <div class="docs-nav-title">How It Works</div>
+          <a href="#doc-engine"    class="docs-nav-item" onclick="docScroll('doc-engine');return false">Animation Engine</a>
+          <a href="#doc-perf"      class="docs-nav-item" onclick="docScroll('doc-perf');return false">Performance</a>
+        </div>
+        <div class="docs-nav-group">
+          <div class="docs-nav-title">Support</div>
+          <a href="#doc-contact"   class="docs-nav-item" onclick="docScroll('doc-contact');return false">Contact &amp; Help</a>
+        </div>
+      </aside>
+
+      <div class="docs-content">
+
+        <!-- WELCOME -->
+        <div class="doc-section" id="doc-welcome">
+          <div class="doc-badge">Getting Started</div>
+          <h1>Welcome to AnimVault</h1>
+          <p class="doc-lead">AnimVault gives you instant access to <strong>70,000+ professional animations</strong> — completely free, no account required. Just open the site, find an animation you love, and copy the code.</p>
+          <div class="doc-highlight-box">
+            <div class="doc-highlight-icon">🆓</div>
+            <div>
+              <strong>Zero barriers.</strong> No signup, no login, no payment. Every animation on AnimVault is free to use in personal and commercial projects.
+            </div>
+          </div>
+        </div>
+
+        <div class="doc-divider"></div>
+
+        <!-- BROWSE -->
+        <div class="doc-section" id="doc-browse">
+          <div class="doc-badge">Step 1</div>
+          <h2>Browse Animations</h2>
+          <p>When AnimVault opens, you land directly on the animation library. The home page shows all 70,000+ animations in a scrollable grid.</p>
+
+          <div class="doc-steps">
+            <div class="doc-step">
+              <div class="doc-step-num">1</div>
+              <div>
+                <strong>Scroll the grid</strong> — AnimVault loads 24 animations at a time. As you scroll down, more automatically load (infinite scroll). You'll never run out!
+              </div>
+            </div>
+            <div class="doc-step">
+              <div class="doc-step-num">2</div>
+              <div>
+                <strong>Watch previews</strong> — Every card shows a live animated preview. Hover over cards to see them highlight.
+              </div>
+            </div>
+            <div class="doc-step">
+              <div class="doc-step-num">3</div>
+              <div>
+                <strong>Click to expand</strong> — Click any animation card to open the code panel below it.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="doc-divider"></div>
+
+        <!-- SEARCH -->
+        <div class="doc-section" id="doc-search">
+          <div class="doc-badge">Step 2</div>
+          <h2>Search &amp; Filter</h2>
+          <p>With 70,000 animations, finding the right one is easy with search and category filters.</p>
+
+          <div class="doc-steps">
+            <div class="doc-step">
+              <div class="doc-step-num">🔍</div>
+              <div>
+                <strong>Search bar</strong> — Type anything in the search box at the top of the home page. Try words like <em>glow</em>, <em>typewriter</em>, <em>loader</em>, <em>bounce</em>, <em>neon</em>, <em>ripple</em>. Results update instantly as you type.
+              </div>
+            </div>
+            <div class="doc-step">
+              <div class="doc-step-num">🏷️</div>
+              <div>
+                <strong>Category buttons</strong> — Use the filter row below the search bar to show only one category. Click <em>Text</em>, <em>SVG</em>, <em>Button</em>, <em>Loader</em>, etc. Click <em>All</em> to see everything again.
+              </div>
+            </div>
+          </div>
+
+          <div class="doc-tip">
+            <span class="doc-tip-label">💡 Tip</span>
+            Combine search + category filter for precise results — e.g. filter by "Button" then search "neon" to find neon button animations only.
+          </div>
+        </div>
+
+        <div class="doc-divider"></div>
+
+        <!-- COPY -->
+        <div class="doc-section" id="doc-copy">
+          <div class="doc-badge">Step 3</div>
+          <h2>Copy the Code</h2>
+          <p>Every animation comes with ready-to-use <strong>HTML</strong>, <strong>CSS</strong>, and <strong>JavaScript</strong> code. Here is exactly how to copy it:</p>
+
+          <div class="doc-steps">
+            <div class="doc-step">
+              <div class="doc-step-num">1</div>
+              <div><strong>Click an animation card</strong> — A code panel slides open below it showing three tabs: HTML, CSS, JS.</div>
+            </div>
+            <div class="doc-step">
+              <div class="doc-step-num">2</div>
+              <div><strong>Click "📋 Copy All"</strong> — This copies the HTML, CSS, and JS together in one click. Paste it directly into your project file.</div>
+            </div>
+            <div class="doc-step">
+              <div class="doc-step-num">3</div>
+              <div><strong>Or copy individual tabs</strong> — Switch to the HTML, CSS, or JS tab to copy only what you need.</div>
+            </div>
+            <div class="doc-step">
+              <div class="doc-step-num">4</div>
+              <div><strong>Paste into your project</strong> — The code is standalone. Add the HTML to your page, the CSS to your stylesheet, and the JS (if any) to your script file. No libraries needed.</div>
+            </div>
+          </div>
+
+          <div class="doc-tip">
+            <span class="doc-tip-label">💡 Tip</span>
+            Many animations have <strong>no JavaScript at all</strong> — they are pure CSS. Just copy the HTML + CSS and you're done.
+          </div>
+        </div>
+
+        <div class="doc-divider"></div>
+
+        <!-- PREVIEW -->
+        <div class="doc-section" id="doc-preview">
+          <div class="doc-badge">Step 4</div>
+          <h2>Live Preview</h2>
+          <p>Before copying, you can preview any animation full screen in an isolated sandbox.</p>
+
+          <div class="doc-steps">
+            <div class="doc-step">
+              <div class="doc-step-num">1</div>
+              <div><strong>Open the code panel</strong> — Click any animation card to expand it.</div>
+            </div>
+            <div class="doc-step">
+              <div class="doc-step-num">2</div>
+              <div><strong>Click "👁 Live Preview"</strong> — A full-screen modal opens with the animation running in a sandboxed iframe.</div>
+            </div>
+            <div class="doc-step">
+              <div class="doc-step-num">3</div>
+              <div><strong>Close the preview</strong> — Click the ✕ button, click outside the modal, or press <kbd>Escape</kbd>.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="doc-divider"></div>
+
+        <!-- EDIT -->
+        <div class="doc-section" id="doc-edit">
+          <div class="doc-badge">Customize</div>
+          <h2>Edit &amp; Customize</h2>
+          <p>The code editors in the expanded panel are fully editable. You can tweak any animation before copying it.</p>
+
+          <div class="doc-steps">
+            <div class="doc-step">
+              <div class="doc-step-num">✏️</div>
+              <div>
+                <strong>Edit HTML</strong> — Change the text content, add a class, wrap in a container. The HTML tab is a live textarea you can type in.
+              </div>
+            </div>
+            <div class="doc-step">
+              <div class="doc-step-num">🎨</div>
+              <div>
+                <strong>Edit CSS</strong> — Change colors, speeds, sizes, glow strength. For example: change <code>animation-duration: 1s</code> to <code>2s</code> to slow it down.
+              </div>
+            </div>
+            <div class="doc-step">
+              <div class="doc-step-num">⚡</div>
+              <div>
+                <strong>Edit JS</strong> — Some animations use a small JavaScript snippet. You can modify behavior here.
+              </div>
+            </div>
+            <div class="doc-step">
+              <div class="doc-step-num">👁</div>
+              <div>
+                <strong>Preview your changes</strong> — After editing, click "👁 Live Preview" to see your modified version before copying.
+              </div>
+            </div>
+          </div>
+
+          <div class="doc-tip">
+            <span class="doc-tip-label">💡 Quick Customizations</span>
+            Change colors by replacing hex values like <code>#6366f1</code> with any color. Change speed by editing <code>animation-duration</code>. Change size by editing <code>font-size</code> or <code>width/height</code>.
+          </div>
+        </div>
+
+        <div class="doc-divider"></div>
+
+        <!-- THEMES -->
+        <div class="doc-section" id="doc-themes">
+          <div class="doc-badge">Platform</div>
+          <h2>Themes</h2>
+          <p>AnimVault has 5 built-in themes that change the entire look of the platform. Your choice is saved automatically.</p>
+
+          <div class="doc-theme-grid">
+            <div class="doc-theme-card">
+              <div class="doc-theme-dot" style="background:linear-gradient(135deg,#6366f1,#8b5cf6)"></div>
+              <div><strong>Dark</strong><br><span>Deep space purple — default theme</span></div>
+            </div>
+            <div class="doc-theme-card">
+              <div class="doc-theme-dot" style="background:linear-gradient(135deg,#4f46e5,#6366f1)"></div>
+              <div><strong>Light</strong><br><span>Clean white with indigo accents</span></div>
+            </div>
+            <div class="doc-theme-card">
+              <div class="doc-theme-dot" style="background:linear-gradient(135deg,#ff3cac,#784ba0,#2b86c5)"></div>
+              <div><strong>Rainbow</strong><br><span>Auto cycling hue-rotate animation</span></div>
+            </div>
+            <div class="doc-theme-card">
+              <div class="doc-theme-dot" style="background:linear-gradient(135deg,#00e5ff,#cc00ff)"></div>
+              <div><strong>Nano</strong><br><span>Neon cyan + purple tech aesthetic</span></div>
+            </div>
+            <div class="doc-theme-card">
+              <div class="doc-theme-dot" style="background:linear-gradient(135deg,#a78bfa,rgba(167,139,250,0.3))"></div>
+              <div><strong>Crystal</strong><br><span>Glassmorphism with frosted blur</span></div>
+            </div>
+          </div>
+
+          <p style="margin-top:1.5rem">To switch: click <strong>🎨 Theme</strong> in the top navbar and select any theme.</p>
+        </div>
+
+        <div class="doc-divider"></div>
+
+        <!-- CATEGORIES -->
+        <div class="doc-section" id="doc-categories">
+          <div class="doc-badge">Platform</div>
+          <h2>Animation Categories</h2>
+          <p>Animations are organized into 10 categories with 7,000 base animations each (700 per category × 10 variations = 70,000 total).</p>
+
+          <div class="doc-cat-grid">
+            <div class="doc-cat-card"><span class="doc-cat-icon">✍</span><div><strong>Text</strong><p>Typewriter, Glitch, Neon Flicker, 3D Rotate, Gradient Flow, Liquid Fill, Prompt Typing</p></div></div>
+            <div class="doc-cat-card"><span class="doc-cat-icon">⬡</span><div><strong>SVG</strong><p>Path Draw, Wave Motion, Morph, Stroke Dash, Fill Animation, Loop Rotation</p></div></div>
+            <div class="doc-cat-card"><span class="doc-cat-icon">⊞</span><div><strong>Button</strong><p>Hover Glow, Pulse Border, Ripple Click, Gradient Slide, Neon Outline, Magnetic</p></div></div>
+            <div class="doc-cat-card"><span class="doc-cat-icon">◱</span><div><strong>Background</strong><p>Particle Flow, Animated Grid, Gradient Mesh, Wave, Floating Shapes, Moving Noise</p></div></div>
+            <div class="doc-cat-card"><span class="doc-cat-icon">▣</span><div><strong>Card</strong><p>Hover Lift, 3D Tilt, Flip, Glass Reflection, Glow Shadow, Parallax</p></div></div>
+            <div class="doc-cat-card"><span class="doc-cat-icon">⊟</span><div><strong>Input</strong><p>Floating Label, Glow on Focus, Border Wave, Underline Slide, Input Pulse</p></div></div>
+            <div class="doc-cat-card"><span class="doc-cat-icon">⟳</span><div><strong>Loader</strong><p>Spinner, Pulse Dot, Bar Loader, Circular Progress, Dot Wave, Ring</p></div></div>
+            <div class="doc-cat-card"><span class="doc-cat-icon">⊹</span><div><strong>Cursor</strong><p>Cursor Glow, Trail Effect, Magnetic Hover, Interactive Dot</p></div></div>
+            <div class="doc-cat-card"><span class="doc-cat-icon">★</span><div><strong>Icon</strong><p>Bounce, Rotate, Shake, Glow Pulse, Float, Scale Pulse</p></div></div>
+            <div class="doc-cat-card"><span class="doc-cat-icon">↓</span><div><strong>Scroll</strong><p>Fade In, Slide In Left, Scale on View, Rotate on View</p></div></div>
+          </div>
+        </div>
+
+        <div class="doc-divider"></div>
+
+        <!-- ENGINE -->
+        <div class="doc-section" id="doc-engine">
+          <div class="doc-badge">How It Works</div>
+          <h2>How AnimVault Works</h2>
+          <p>AnimVault generates animations dynamically in the browser — nothing is pre-stored. Here is how 70,000 animations are created from just 7,000 base types:</p>
+
+          <div class="doc-flow">
+            <div class="doc-flow-step">
+              <div class="doc-flow-num">1</div>
+              <div class="doc-flow-body">
+                <strong>7,000 Base Animations</strong>
+                <p>Each category has 700 unique animation types with different visual effects, timing functions, and techniques.</p>
+              </div>
+            </div>
+            <div class="doc-flow-arrow">↓</div>
+            <div class="doc-flow-step">
+              <div class="doc-flow-num">2</div>
+              <div class="doc-flow-body">
+                <strong>× 10 Variation Parameters</strong>
+                <p>Each base animation is varied across: <em>speed</em>, <em>color</em>, <em>size</em>, <em>direction</em>, <em>glow</em>, <em>blur</em>, <em>opacity</em>, <em>scale</em>, <em>stroke</em>, <em>delay</em>.</p>
+              </div>
+            </div>
+            <div class="doc-flow-arrow">↓</div>
+            <div class="doc-flow-step">
+              <div class="doc-flow-num">3</div>
+              <div class="doc-flow-body">
+                <strong>= 70,000 Unique Animations</strong>
+                <p>Every combination produces a distinct animation with its own HTML, CSS, and JS code — ready to copy.</p>
+              </div>
+            </div>
+            <div class="doc-flow-arrow">↓</div>
+            <div class="doc-flow-step">
+              <div class="doc-flow-num">4</div>
+              <div class="doc-flow-body">
+                <strong>Loaded on Demand</strong>
+                <p>Animations are generated in batches of 24 as you scroll. Nothing is pre-loaded — keeping the page fast and memory-efficient.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="doc-divider"></div>
+
+        <!-- PERFORMANCE -->
+        <div class="doc-section" id="doc-perf">
+          <div class="doc-badge">How It Works</div>
+          <h2>Performance &amp; Speed</h2>
+          <p>AnimVault is built for smooth 60fps performance even with thousands of animations on screen.</p>
+
+          <div class="doc-perf-grid">
+            <div class="doc-perf-card">
+              <div class="doc-perf-icon">⚡</div>
+              <strong>GPU Accelerated</strong>
+              <p>Every animation uses <code>transform3d</code> and <code>will-change</code> to move work from CPU to GPU.</p>
+            </div>
+            <div class="doc-perf-card">
+              <div class="doc-perf-icon">♾️</div>
+              <strong>Infinite Scroll</strong>
+              <p>Uses <code>IntersectionObserver</code> to detect when you reach the bottom and load the next 24 animations.</p>
+            </div>
+            <div class="doc-perf-card">
+              <div class="doc-perf-icon">🧠</div>
+              <strong>Lazy Generation</strong>
+              <p>Animations are only generated when you need them — not all 70,000 upfront. Keeps memory low.</p>
+            </div>
+            <div class="doc-perf-card">
+              <div class="doc-perf-icon">🎞️</div>
+              <strong>RequestAnimationFrame</strong>
+              <p>All canvas effects (splash screen, contact page particles) run on rAF for buttery smooth rendering.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="doc-divider"></div>
+
+        <!-- CONTACT -->
+        <div class="doc-section" id="doc-contact">
+          <div class="doc-badge">Support</div>
+          <h2>Contact &amp; Help</h2>
+          <p>Need help, found a bug, or want to request an animation type? We're here to help.</p>
+
+          <div class="doc-steps">
+            <div class="doc-step">
+              <div class="doc-step-num">💬</div>
+              <div>
+                <strong>Use the Contact Page</strong> — Go to <a href="#" onclick="App.navigate('contact');return false;" style="color:var(--accent)">Contact</a> and fill in the form. We reply within 24 hours.
+              </div>
+            </div>
+            <div class="doc-step">
+              <div class="doc-step-num">📧</div>
+              <div>
+                <strong>Email directly</strong> — Reach us at <a href="mailto:animvault.cont@gmail.com" style="color:var(--accent)">animvault.cont@gmail.com</a>
+              </div>
+            </div>
+            <div class="doc-step">
+              <div class="doc-step-num">❓</div>
+              <div>
+                <strong>Check the FAQ</strong> — Visit the <a href="#" onclick="App.navigate('faq');return false;" style="color:var(--accent)">FAQ page</a> for quick answers to common questions.
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== FAQ PAGE ===== -->
+  <div class="page" id="page-faq">
+    <div class="faq-container">
+      <div style="text-align:center;margin-bottom:3rem">
+        <div style="display:inline-block;padding:0.3rem 1rem;background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.3);border-radius:20px;font-size:0.8rem;color:var(--accent);margin-bottom:1rem">FAQ</div>
+        <h1 class="section-title">Frequently Asked Questions</h1>
+        <p class="section-subtitle" style="margin-bottom:0">Everything you need to know about AnimVault.</p>
+      </div>
+
+      <div class="faq-item" onclick="toggleFaq(this)">
+        <div class="faq-question">What is AnimVault? <span class="faq-icon">+</span></div>
+        <div class="faq-answer"><div class="faq-answer-content">AnimVault is a developer animation platform with 70,000+ GPU-accelerated animations across 10 categories. Browse, search, copy HTML/CSS/JS code, and deploy professional animations instantly — no signup required.</div></div>
+      </div>
+      <div class="faq-item" onclick="toggleFaq(this)">
+        <div class="faq-question">Do I need to create an account? <span class="faq-icon">+</span></div>
+        <div class="faq-answer"><div class="faq-answer-content">No account needed! AnimVault is completely free and open. Just browse, click any animation to see its code, and copy it directly into your project. No signup, no login, no barriers.</div></div>
+      </div>
+      <div class="faq-item" onclick="toggleFaq(this)">
+        <div class="faq-question">How many animations are available? <span class="faq-icon">+</span></div>
+        <div class="faq-answer"><div class="faq-answer-content">AnimVault generates 70,000+ animation variations from 7,000 base animations. Each base animation is varied across 10 parameters including speed, color, direction, blur, glow, scale, and more.</div></div>
+      </div>
+      <div class="faq-item" onclick="toggleFaq(this)">
+        <div class="faq-question">What animation categories are available? <span class="faq-icon">+</span></div>
+        <div class="faq-answer"><div class="faq-answer-content">10 categories: Text (typewriter, glitch, neon, 3D), SVG (path draw, wave, morph), Button (pulse, ripple, magnetic), Background (particles, mesh, wave), Card (tilt, flip, parallax), Input (floating label, glow), Loader (spinner, bar, dots), Cursor (glow, trail), Icon (bounce, spin, shake), and Scroll animations.</div></div>
+      </div>
+      <div class="faq-item" onclick="toggleFaq(this)">
+        <div class="faq-question">How do I use an animation? <span class="faq-icon">+</span></div>
+        <div class="faq-answer"><div class="faq-answer-content">Click any animation card to expand it. You'll see HTML, CSS, and JS code tabs. Click "Copy All" to copy everything at once, or switch tabs to copy individual sections. Paste into your project — ready to go, no dependencies.</div></div>
+      </div>
+      <div class="faq-item" onclick="toggleFaq(this)">
+        <div class="faq-question">Can I edit animations before copying? <span class="faq-icon">+</span></div>
+        <div class="faq-answer"><div class="faq-answer-content">Yes! The code editors are fully editable. Modify HTML, CSS, or JS, then click "Live Preview" to see your changes in a sandboxed iframe. When done, click "Copy All" for the modified code.</div></div>
+      </div>
+      <div class="faq-item" onclick="toggleFaq(this)">
+        <div class="faq-question">Do the animations work on all browsers? <span class="faq-icon">+</span></div>
+        <div class="faq-answer"><div class="faq-answer-content">All animations use modern CSS and JavaScript supported in Chrome, Firefox, Safari, and Edge. GPU acceleration via transform3d and will-change is used throughout for smooth 60fps performance.</div></div>
+      </div>
+      <div class="faq-item" onclick="toggleFaq(this)">
+        <div class="faq-question">Are the animations free for commercial use? <span class="faq-icon">+</span></div>
+        <div class="faq-answer"><div class="faq-answer-content">Yes! All animations are completely free for personal and commercial projects. Copy, modify, and use them anywhere without attribution.</div></div>
+      </div>
+      <div class="faq-item" onclick="toggleFaq(this)">
+        <div class="faq-question">How does the theme system work? <span class="faq-icon">+</span></div>
+        <div class="faq-answer"><div class="faq-answer-content">Click the 🎨 Theme button in the navbar to switch between 5 themes: Dark (default), Light, Rainbow (auto hue-rotate), Nano (neon cyan + purple), and Crystal (glassmorphism). Your preference is saved locally.</div></div>
+      </div>
+      <div class="faq-item" onclick="toggleFaq(this)">
+        <div class="faq-question">How do I contact the AnimVault team? <span class="faq-icon">+</span></div>
+        <div class="faq-answer"><div class="faq-answer-content">Use the Contact page to send a message directly. We typically reply within 24 hours. You can also email us at <a href="mailto:animvault.cont@gmail.com" style="color:var(--accent)">animvault.cont@gmail.com</a>.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== CONTACT PAGE ===== -->
+  <div class="page" id="page-contact">
+    <div class="contact-page">
+      <canvas class="contact-canvas" id="contact-canvas" style="position:absolute;inset:0;width:100%;height:100%"></canvas>
+      <div class="floating-orb" style="width:500px;height:500px;background:radial-gradient(circle,rgba(99,102,241,0.06),transparent);top:-200px;left:-200px;animation-duration:10s"></div>
+      <div class="floating-orb" style="width:400px;height:400px;background:radial-gradient(circle,rgba(139,92,246,0.06),transparent);bottom:-200px;right:-200px;animation-duration:8s;animation-delay:2s"></div>
+
+      <div class="contact-content">
+        <div class="contact-info">
+          <div style="display:inline-block;padding:0.3rem 1rem;background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.3);border-radius:20px;font-size:0.8rem;color:var(--accent);margin-bottom:1.5rem">✦ Get In Touch</div>
+          <h2>Let's <span class="gradient-text">Connect</span></h2>
+          <p>Have questions about AnimVault? Want to report a bug, request an animation, or explore partnership opportunities? We'd love to hear from you.</p>
+
+          <div class="contact-detail">
+            <div class="contact-detail-icon">📧</div>
+            <div>
+              <div style="font-weight:600;font-size:0.9rem">Email</div>
+              <div style="color:var(--text-secondary);font-size:0.85rem"><a href="mailto:animvault.cont@gmail.com" style="color:var(--accent)">animvault.cont@gmail.com</a></div>
+            </div>
+          </div>
+          <div class="contact-detail">
+            <div class="contact-detail-icon">⚡</div>
+            <div>
+              <div style="font-weight:600;font-size:0.9rem">Response Time</div>
+              <div style="color:var(--text-secondary);font-size:0.85rem">Usually within 24 hours</div>
+            </div>
+          </div>
+          <div class="contact-detail">
+            <div class="contact-detail-icon">🌍</div>
+            <div>
+              <div style="font-weight:600;font-size:0.9rem">Global Support</div>
+              <div style="color:var(--text-secondary);font-size:0.85rem">Available worldwide, all timezones</div>
+            </div>
+          </div>
+
+          <div style="margin-top:2rem;padding:1.5rem;background:var(--bg-card);border:1px solid var(--border);border-radius:16px">
+            <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:1rem;font-family:'JetBrains Mono',monospace">// ANIMVAULT STATS</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+              <div><div style="font-family:'Sora',sans-serif;font-weight:800;font-size:1.5rem" class="gradient-text">70K+</div><div style="font-size:0.8rem;color:var(--text-secondary)">Animations</div></div>
+              <div><div style="font-family:'Sora',sans-serif;font-weight:800;font-size:1.5rem" class="gradient-text">10</div><div style="font-size:0.8rem;color:var(--text-secondary)">Categories</div></div>
+              <div><div style="font-family:'Sora',sans-serif;font-weight:800;font-size:1.5rem" class="gradient-text">5</div><div style="font-size:0.8rem;color:var(--text-secondary)">Themes</div></div>
+              <div><div style="font-family:'Sora',sans-serif;font-weight:800;font-size:1.5rem" class="gradient-text">Free</div><div style="font-size:0.8rem;color:var(--text-secondary)">Always</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="contact-form-card">
+          <div style="margin-bottom:2rem">
+            <h3 style="font-family:'Sora',sans-serif;font-weight:800;font-size:1.5rem;margin-bottom:0.5rem">Send a Message</h3>
+            <p style="color:var(--text-secondary);font-size:0.875rem">We'll reply within 24 hours.</p>
+          </div>
+          <form id="contact-form" novalidate>
+            <div class="form-group">
+              <label class="form-label">Your Name</label>
+              <div class="form-input-wrapper">
+                <input type="text" name="name" class="form-input" placeholder="John Developer">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Email Address</label>
+              <div class="form-input-wrapper">
+                <input type="email" name="email" class="form-input" placeholder="you@example.com">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Subject</label>
+              <div class="form-input-wrapper">
+                <input type="text" name="subject" class="form-input" placeholder="Animation request / Bug report / General">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Message</label>
+              <textarea name="message" class="form-input" placeholder="Tell us what's on your mind..." style="min-height:120px;resize:vertical;font-family:'Space Grotesk',sans-serif"></textarea>
+            </div>
+            <button type="submit" class="auth-btn">
+              <span>Send Message ✦</span>
+            </button>
+          </form>
+          <div style="position:absolute;top:1rem;right:1rem;width:60px;height:60px;border:1px solid var(--accent);border-radius:50%;opacity:0.2;animation:pulseRing 2s ease-out infinite"></div>
+          <div style="position:absolute;top:1.5rem;right:1.5rem;width:40px;height:40px;border:1px solid var(--accent2);border-radius:50%;opacity:0.15;animation:pulseRing 2s ease-out infinite 0.5s"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== PRIVACY PAGE ===== -->
+  <div class="page" id="page-privacy">
+    <div class="legal-content">
+      <h1>Privacy Policy</h1>
+      <span class="updated">Last updated: January 2025</span>
+      <h2>1. Information We Collect</h2>
+      <p>AnimVault does not require account creation. No personal data is collected when browsing or copying animations. If you submit the contact form, we collect only the name, email, and message you provide.</p>
+      <h2>2. How We Use Your Information</h2>
+      <p>Contact form submissions are used solely to respond to your inquiry. We use EmailJS to process contact form submissions. We do not sell your data to third parties.</p>
+      <h2>3. Data Storage</h2>
+      <p>Theme preferences are stored in your browser's localStorage. No browsing history, animation usage data, or personal information is stored on our servers.</p>
+      <h2>4. Cookies & Local Storage</h2>
+      <p>AnimVault uses localStorage only to save your theme preference. No tracking cookies are used. You can clear browser storage at any time to remove this data.</p>
+      <h2>5. Third-Party Services</h2>
+      <p>We use EmailJS for contact form delivery. We also load fonts from Google Fonts, which may log your IP address per Google's privacy policy.</p>
+      <h2>6. Data Security</h2>
+      <p>We implement industry-standard security practices. Since no accounts exist, there is no stored password or authentication data that could be compromised.</p>
+      <h2>7. Your Rights</h2>
+      <p>If you submitted a contact form and wish your message deleted, contact us at <a href="mailto:animvault.cont@gmail.com" style="color:var(--accent)">animvault.cont@gmail.com</a>. We will process deletion requests within 30 days.</p>
+      <h2>8. Contact</h2>
+      <p>For privacy questions, contact us at <a href="mailto:animvault.cont@gmail.com" style="color:var(--accent)">animvault.cont@gmail.com</a>.</p>
+    </div>
+  </div>
+
+  <!-- ===== TERMS PAGE ===== -->
+  <div class="page" id="page-terms">
+    <div class="legal-content">
+      <h1>Terms of Service</h1>
+      <span class="updated">Last updated: January 2025</span>
+      <h2>1. Acceptance of Terms</h2>
+      <p>By accessing AnimVault, you agree to these Terms of Service. If you do not agree, please do not use the platform.</p>
+      <h2>2. Use of Animations</h2>
+      <p>All animations are free to use in personal and commercial projects. You may copy, modify, and distribute animation code without attribution. You may not resell AnimVault's codebase as a standalone product.</p>
+      <h2>3. No Account Required</h2>
+      <p>AnimVault does not require user registration. All animations are freely accessible. No payment, signup, or personal information is required to browse and download animations.</p>
+      <h2>4. Prohibited Uses</h2>
+      <p>You may not use AnimVault to distribute malware, conduct automated scraping without permission, or attempt to reverse-engineer backend systems.</p>
+      <h2>5. Service Availability</h2>
+      <p>AnimVault is provided "as is" without warranty of uptime. We reserve the right to modify or discontinue services at any time.</p>
+      <h2>6. Intellectual Property</h2>
+      <p>The AnimVault platform design, branding, and engine code are proprietary. Animation code is freely usable as described in Section 2.</p>
+      <h2>7. Limitation of Liability</h2>
+      <p>AnimVault shall not be liable for any indirect, incidental, or consequential damages arising from use of the platform.</p>
+      <h2>8. Contact</h2>
+      <p>Questions about these terms? Email us at <a href="mailto:animvault.cont@gmail.com" style="color:var(--accent)">animvault.cont@gmail.com</a>.</p>
+    </div>
+  </div>
+
+  <!-- ===== FOOTER ===== -->
+  <footer id="main-footer">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div style="font-family:'Sora',sans-serif;font-size:1.5rem;font-weight:800" class="gradient-text">AnimVault</div>
+        <p>70,000+ GPU-accelerated animations for developers. Browse, copy, deploy. No signup required.</p>
+        <div style="margin-top:1rem;display:flex;gap:0.75rem">
+          <span style="font-size:0.75rem;color:var(--text-muted);font-family:'JetBrains Mono',monospace">v2.0.0</span>
+          <span style="font-size:0.75rem;color:var(--text-muted)">•</span>
+          <span style="font-size:0.75rem;color:var(--accent);font-family:'JetBrains Mono',monospace">Free Forever</span>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Platform</h4>
+        <a href="#" onclick="App.navigate('home');return false">Home</a>
+        <a href="#" onclick="App.navigate('about');return false">About</a>
+        <a href="#" onclick="App.navigate('docs');return false">Documentation</a>
+        <a href="#" onclick="App.navigate('faq');return false">FAQ</a>
+      </div>
+      <div class="footer-col">
+        <h4>Categories</h4>
+        <a href="#" onclick="App.navigate('home');AnimGrid.filter('Text');return false">Text Animations</a>
+        <a href="#" onclick="App.navigate('home');AnimGrid.filter('Button');return false">Button Animations</a>
+        <a href="#" onclick="App.navigate('home');AnimGrid.filter('Loader');return false">Loaders</a>
+        <a href="#" onclick="App.navigate('home');AnimGrid.filter('Background');return false">Backgrounds</a>
+      <div class="footer-col">
+        <h4>Legal</h4>
+        <a href="#" onclick="App.navigate('privacy');return false">Privacy Policy</a>
+        <a href="#" onclick="App.navigate('terms');return false">Terms of Service</a>
+        <a href="#" onclick="App.navigate('contact');return false">Contact Us</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2025 AnimVault. All rights reserved.</span>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:0.75rem">Built with ⚡ for developers</span>
+    </div>
+  </footer>
+
+  <script src="js/animation-engine.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
