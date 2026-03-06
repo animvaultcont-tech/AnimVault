@@ -13,7 +13,7 @@ Disallow: /js/app.js
 Disallow: /css/
 
 # Sitemap location
-Sitemap: https://animvault.com/sitemap.xml
+Sitemap: https://animvaultcont-tech.github.io/AnimVault/sitemap.xml
 
 # Crawl delay (be respectful)
 Crawl-delay: 10
